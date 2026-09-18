@@ -42,6 +42,17 @@ Party villagers (settlers/guards in your adventure party) can be made to treat c
 - Whitelisted players and the party owner are never attacked.
 - Requires PvP to be active (world `Forced PvP` or per-player PvP); otherwise the game blocks friendly fire and nothing happens.
 
+## Reliability note
+
+Automatic hate recording can occasionally miss events. This is expected in some situations, for example:
+
+- the attack was blocked by the game (PvP off, same team, creative/invincible, or protection),
+- the attacker/victim was not in a valid PvP context at that moment,
+- the hit happened in a way the mod does not observe (or the server does not run the mod),
+- settings had not been uploaded to the server yet.
+
+If you need reliable targeting, **add the player to the hatred list manually** in the management window. Manual entries are saved and always applied while the system is enabled, so they do not depend on event detection.
+
 ## Build
 
 Requires a JDK (JDK 21 is fine; compiled with `--release 8`) and the game install path set in `build.ps1`.
