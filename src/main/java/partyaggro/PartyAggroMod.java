@@ -34,6 +34,8 @@ public class PartyAggroMod {
 
     /** Rebindable in Settings > Controls (mod section). Toggles the saved "enabled" flag. */
     public static Control toggleControl;
+    /** Rebindable in Settings > Controls (mod section). Opens the hatred management window. */
+    public static Control openManageControl;
 
     private static volatile boolean dirty = true;
     private static long lastSentWorldId = Long.MIN_VALUE;
@@ -70,6 +72,9 @@ public class PartyAggroMod {
                 toggleControl = Control.addModControl(new Control(78, "partyaggro_toggle",
                         new LocalMessage("partyaggro", "control_toggle")));
                 toggleControl.tooltip = new LocalMessage("partyaggro", "control_toggle_tip");
+                openManageControl = Control.addModControl(new Control(77, "partyaggro_openmanage",
+                        new LocalMessage("partyaggro", "control_openmanage")));
+                openManageControl.tooltip = new LocalMessage("partyaggro", "control_openmanage_tip");
             }
         } catch (Throwable t) {
             System.out.println("[PartyAggro] failed to register control: " + t);
@@ -116,6 +121,10 @@ public class PartyAggroMod {
                 notifyToggle(section.enabled);
                 partyaggro.util.Debug.log("hotkey toggled enabled=" + section.enabled);
             }
+        }
+
+        if (openManageControl != null && openManageControl.isPressed() && ClientContext.client() != null) {
+            PartyAggroUi.openManage();
         }
 
         Client client = ClientContext.client();

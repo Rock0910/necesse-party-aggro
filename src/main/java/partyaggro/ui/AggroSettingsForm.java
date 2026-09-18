@@ -90,7 +90,14 @@ public class AggroSettingsForm extends Form {
         });
         flow.nextY(this.boxDebug, 8);
 
-        FormTextButton manage = new FormTextButton(L.t("manage"), 6, flow.next(), getWidth() - 12, FormInputSize.SIZE_24, ButtonColor.BASE);
+        String manageLabel = L.t("manage");
+        try {
+            if (PartyAggroMod.openManageControl != null) {
+                manageLabel = manageLabel + " (" + PartyAggroMod.openManageControl.getKeyName() + ")";
+            }
+        } catch (Throwable ignored) {
+        }
+        FormTextButton manage = new FormTextButton(manageLabel, 6, flow.next(), getWidth() - 12, FormInputSize.SIZE_24, ButtonColor.BASE);
         manage.onClicked(e -> PartyAggroUi.openManage());
         this.addComponent(manage);
         flow.nextY(manage, 5);
