@@ -124,7 +124,7 @@ public class PartyAggroMod {
         }
 
         if (openManageControl != null && openManageControl.isPressed() && ClientContext.client() != null) {
-            PartyAggroUi.openManage();
+            PartyAggroUi.toggleManage();
         }
 
         Client client = ClientContext.client();

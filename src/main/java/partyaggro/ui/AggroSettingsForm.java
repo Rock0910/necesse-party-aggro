@@ -26,6 +26,8 @@ public class AggroSettingsForm extends Form {
     private final FormCheckBox boxA2;
     private final FormCheckBox boxA3;
     private final FormCheckBox boxDebug;
+    private final FormTextButton manageButton;
+    private String lastManageLabel;
 
     public AggroSettingsForm() {
         super("partyaggro_settings", 340, 120);
@@ -90,17 +92,11 @@ public class AggroSettingsForm extends Form {
         });
         flow.nextY(this.boxDebug, 8);
 
-        String manageLabel = L.t("manage");
-        try {
-            if (PartyAggroMod.openManageControl != null) {
-                manageLabel = manageLabel + " (" + PartyAggroMod.openManageControl.getKeyName() + ")";
-            }
-        } catch (Throwable ignored) {
-        }
-        FormTextButton manage = new FormTextButton(manageLabel, 6, flow.next(), getWidth() - 12, FormInputSize.SIZE_24, ButtonColor.BASE);
-        manage.onClicked(e -> PartyAggroUi.openManage());
-        this.addComponent(manage);
-        flow.nextY(manage, 5);
+        this.lastManageLabel = manageLabel();
+        this.manageButton = new FormTextButton(this.lastManageLabel, 6, flow.next(), getWidth() - 12, FormInputSize.SIZE_24, ButtonColor.BASE);
+        this.manageButton.onClicked(e -> PartyAggroUi.openManage());
+        this.addComponent(this.manageButton);
+        flow.nextY(this.manageButton, 5);
 
         FormTextButton keys = new FormTextButton(L.t("keybindings"), 6, flow.next(), getWidth() - 12, FormInputSize.SIZE_24, ButtonColor.BASE);
         keys.onClicked(e -> PartyAggroUi.openKeyBindings());
@@ -118,8 +114,8 @@ public class AggroSettingsForm extends Form {
         linkDown(this.boxA1, this.boxA2);
         linkDown(this.boxA2, this.boxA3);
         linkDown(this.boxA3, this.boxDebug);
-        linkDown(this.boxDebug, manage);
-        linkDown(manage, keys);
+        linkDown(this.boxDebug, this.manageButton);
+        linkDown(this.manageButton, keys);
         linkDown(keys, close);
         // Initial controller focus: the master enable checkbox.
         this.boxEnabled.controllerInitialFocusPriority = 10;
@@ -141,6 +137,26 @@ public class AggroSettingsForm extends Form {
 
     public void syncEnabled(boolean enabled) {
         this.boxEnabled.checked = enabled;
+    }
+
+    /** Refreshes key hints so they follow the currently bound keys. */
+    public void tick() {
+        String label = manageLabel();
+        if (!label.equals(this.lastManageLabel)) {
+            this.lastManageLabel = label;
+            this.manageButton.setText(label);
+        }
+    }
+
+    private static String manageLabel() {
+        String label = L.t("manage");
+        try {
+            if (PartyAggroMod.openManageControl != null) {
+                label = label + " (" + PartyAggroMod.openManageControl.getKeyName() + ")";
+            }
+        } catch (Throwable ignored) {
+        }
+        return label;
     }
 
     private void apply() {

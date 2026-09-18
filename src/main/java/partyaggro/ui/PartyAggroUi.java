@@ -158,7 +158,20 @@ public final class PartyAggroUi {
         }
     }
 
+    /** Hotkey behaviour: toggle the hatred list open/closed. */
+    public static void toggleManage() {
+        if (manageOpen) {
+            closeManage();
+        } else {
+            openManage();
+        }
+    }
+
     public static void tickManage() {
+        // Refresh the settings window's key hints (they follow the bound keys).
+        if (settingsForm != null && !settingsForm.isHidden()) {
+            settingsForm.tick();
+        }
         if (!manageOpen || formManager == null) {
             return;
         }
