@@ -1,5 +1,13 @@
 # Party Aggro
 
+讓冒險隊伍中的村民可以根據新增的仇恨系統設定攻擊玩家 有快捷鍵可開關 可設定 預設為N
+(在冒險隊伍介面上新增一個齒輪按鈕 裡面就是跟這模組有關的功能 我覺得應該夠直覺)
+使用Opencode開發 也一樣除非自己有遇到BUG不然不更新 不期待 沒傷害
+
+不准營利，不准以任何方式危害別人（尤其是發佈有毒的檔案等）
+源碼:https://github.com/Rock0910/necesse-party-aggro
+使用機翻 - 支援：English、日文、簡中、繁中
+
 Adventure party aggro / retaliation controls for **Necesse 1.3.x**, built for multiplayer (hosted and dedicated servers).
 
 Party villagers (settlers/guards in your adventure party) can be made to treat chosen players as enemies, retaliate when you or your party are attacked, and proactively attack a managed hatred list.
@@ -8,6 +16,7 @@ Party villagers (settlers/guards in your adventure party) can be made to treat c
 
 ## Features
 
+在冒險隊伍介面上新增一個齒輪按鈕 裡面就是跟這模組有關的功能了
 - **Gear button** in the adventure party window opens the mod's settings.
 - Master **enable** switch + three independent auto-hate triggers (all off by default):
   - Auto-hate when you are attacked
