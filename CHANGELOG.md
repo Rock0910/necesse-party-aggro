@@ -1,7 +1,7 @@
 # Changelog
 
 ## 1.0.3
-- Added a rebindable hotkey to open the hatred management window (default `M`), in Settings > Controls.
+- Added a rebindable hotkey to open the hatred management window (default `B`), in Settings > Controls.
 - The settings window's "Manage" button now shows the bound key.
 
 ## 1.0.2
