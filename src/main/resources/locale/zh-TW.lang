@@ -6,6 +6,7 @@ enable_system=啟用仇恨系統
 auto_player_attacked=你受攻擊時自動記仇
 auto_party_member_attacked=隊伍成員受攻擊時自動記仇
 auto_player_attacks=你主動攻擊玩家時自動記仇
+debug_log=除錯記錄（寫入 partyaggro-debug.log）
 manage=管理仇恨 / 白名單
 keybindings=按鍵綁定
 filter=篩選

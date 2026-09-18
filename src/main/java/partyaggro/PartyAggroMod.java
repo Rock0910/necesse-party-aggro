@@ -91,6 +91,7 @@ public class PartyAggroMod {
             @Override
             public void applyLoadData(LoadData data) {
                 PartyAggroMod.CONFIG.deserialize(data.getStringList("config"));
+                partyaggro.util.Debug.setEnabled(PartyAggroMod.CONFIG.debug);
             }
         };
     }

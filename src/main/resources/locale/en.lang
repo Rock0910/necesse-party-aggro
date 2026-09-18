@@ -6,6 +6,7 @@ enable_system=Enable aggro system
 auto_player_attacked=Auto-hate when you are attacked
 auto_party_member_attacked=Auto-hate when a party member is attacked
 auto_player_attacks=Auto-hate when you attack a player
+debug_log=Debug log (writes partyaggro-debug.log)
 manage=Manage hatred / whitelist
 keybindings=Key bindings
 filter=Filter

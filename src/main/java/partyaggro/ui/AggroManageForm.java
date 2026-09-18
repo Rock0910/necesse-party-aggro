@@ -47,6 +47,9 @@ public class AggroManageForm extends Form {
     private final FormLabel pageLabel;
     private final FormTextButton prevButton;
     private final FormTextButton nextButton;
+    private final FormContentIconButton refreshButton;
+    private final FormContentIconButton closeButton;
+    private final FormContentIconButton clearAllButton;
     private String lastFilter = "";
     private int lastVersion = -1;
     private int currentPage = 0;
@@ -64,26 +67,26 @@ public class AggroManageForm extends Form {
         this.search.placeHolder = new LocalMessage("partyaggro", "search_placeholder");
         this.addComponent(this.search);
 
-        FormContentIconButton refresh = new FormContentIconButton(width - 140, 34, FormInputSize.SIZE_32,
+        this.refreshButton = new FormContentIconButton(width - 140, 34, FormInputSize.SIZE_32,
                 ButtonColor.BASE, ui.button_search_24, L.m("refresh"));
-        refresh.onClicked(e -> PartyAggroMod.requestPlayers());
-        this.addComponent(refresh);
+        this.refreshButton.onClicked(e -> PartyAggroMod.requestPlayers());
+        this.addComponent(this.refreshButton);
 
-        FormContentIconButton close = new FormContentIconButton(width - 96, 34, FormInputSize.SIZE_32,
+        this.closeButton = new FormContentIconButton(width - 96, 34, FormInputSize.SIZE_32,
                 ButtonColor.BASE, ui.button_cross, L.m("close"));
-        close.onClicked(e -> PartyAggroUi.closeManage());
-        this.addComponent(close);
+        this.closeButton.onClicked(e -> PartyAggroUi.closeManage());
+        this.addComponent(this.closeButton);
 
-        FormContentIconButton clearAll = new FormContentIconButton(width - 52, 34, FormInputSize.SIZE_32,
+        this.clearAllButton = new FormContentIconButton(width - 52, 34, FormInputSize.SIZE_32,
                 ButtonColor.BASE, ui.button_trash_24, L.m("clear_all"));
-        clearAll.onClicked(e -> {
+        this.clearAllButton.onClicked(e -> {
             AggroServerSection section = PartyAggroMod.CONFIG.get(ClientContext.currentWorldId());
             section.clearAllHatred();
             PartyAggroMod.save();
             PartyAggroMod.markDirty();
             this.pendingRebuild = true;
         });
-        this.addComponent(clearAll);
+        this.addComponent(this.clearAllButton);
 
         this.filterDropdown = new FormDropdownSelectionButton<String>(6, 72, FormInputSize.SIZE_32,
                 ButtonColor.BASE, 190, L.m("filter"));
@@ -120,6 +123,20 @@ public class AggroManageForm extends Form {
         });
         this.addComponent(this.nextButton);
 
+        // Explicit controller navigation for the static controls.
+        linkRight(this.search, this.refreshButton);
+        linkRight(this.refreshButton, this.closeButton);
+        linkRight(this.closeButton, this.clearAllButton);
+        linkRight(this.filterDropdown, this.prevButton);
+        linkRight(this.prevButton, this.nextButton);
+        linkDown(this.search, this.filterDropdown);
+        linkDown(this.refreshButton, this.filterDropdown);
+        linkDown(this.closeButton, this.filterDropdown);
+        linkDown(this.clearAllButton, this.filterDropdown);
+        this.prevButton.controllerUpFocus = this.refreshButton;
+        this.nextButton.controllerUpFocus = this.clearAllButton;
+        this.filterDropdown.controllerInitialFocusPriority = 10;
+
         // Column headers
         this.addComponent(new FormLabel(L.t("col_player"), new FontOptions(12), FormLabel.ALIGN_LEFT, COL_NAME, 112, COL_STATE - COL_NAME - 4));
         this.addComponent(new FormLabel(L.t("col_state"), new FontOptions(12), FormLabel.ALIGN_LEFT, COL_STATE, 112, COL_FIRST - COL_STATE - 4));
@@ -138,6 +155,20 @@ public class AggroManageForm extends Form {
         }
 
         this.rebuild();
+    }
+
+    private static void linkRight(necesse.gfx.forms.components.FormComponent left, necesse.gfx.forms.components.FormComponent right) {
+        left.controllerRightFocus = right;
+        right.controllerLeftFocus = left;
+    }
+
+    private static void linkDown(necesse.gfx.forms.components.FormComponent upper, necesse.gfx.forms.components.FormComponent lower) {
+        upper.controllerDownFocus = lower;
+        lower.controllerUpFocus = upper;
+    }
+
+    public necesse.gfx.forms.controller.ControllerFocusHandler getInitialFocus() {
+        return this.filterDropdown;
     }
 
     @Override
@@ -228,6 +259,7 @@ public class AggroManageForm extends Form {
 
         int listWidth = getWidth() - 8;
         int rowY = 0;
+        java.util.List<necesse.gfx.forms.components.FormComponent> rowFirsts = new ArrayList<necesse.gfx.forms.components.FormComponent>();
         for (int i = from; i < to; i++) {
             final AggroPlayerRef player = filtered.get(i);
             boolean isSelf = self >= 0L && player.authentication == self;
@@ -250,6 +282,7 @@ public class AggroManageForm extends Form {
                     FormLabel.ALIGN_LEFT, COL_LAST, rowY + 4, listWidth - COL_LAST - 76));
 
             int buttonY = rowY + 1;
+            java.util.List<necesse.gfx.forms.components.FormComponent> rowButtons = new ArrayList<necesse.gfx.forms.components.FormComponent>();
             if (!isSelf) {
                 FormContentIconButton hateButton = new FormContentIconButton(listWidth - 72, buttonY,
                         FormInputSize.SIZE_20, ButtonColor.BASE, ui.priority_top, L.m("set_hatred"));
@@ -260,6 +293,7 @@ public class AggroManageForm extends Form {
                     this.pendingRebuild = true;
                 });
                 this.listBox.addComponent(hateButton);
+                rowButtons.add(hateButton);
             }
 
             FormContentIconButton whiteButton = new FormContentIconButton(listWidth - 48, buttonY,
@@ -271,6 +305,7 @@ public class AggroManageForm extends Form {
                 this.pendingRebuild = true;
             });
             this.listBox.addComponent(whiteButton);
+            rowButtons.add(whiteButton);
 
             FormContentIconButton clearButton = new FormContentIconButton(listWidth - 24, buttonY,
                     FormInputSize.SIZE_20, ButtonColor.BASE, ui.button_minus_20, L.m("set_clear"));
@@ -281,8 +316,30 @@ public class AggroManageForm extends Form {
                 this.pendingRebuild = true;
             });
             this.listBox.addComponent(clearButton);
+            rowButtons.add(clearButton);
+
+            for (int b = 0; b + 1 < rowButtons.size(); b++) {
+                linkRight(rowButtons.get(b), rowButtons.get(b + 1));
+            }
+            if (!rowButtons.isEmpty()) {
+                rowFirsts.add(rowButtons.get(0));
+            }
 
             rowY += ROW_HEIGHT;
+        }
+
+        // Wire the vertical controller focus chain through the visible rows.
+        for (int i = 0; i < rowFirsts.size(); i++) {
+            necesse.gfx.forms.components.FormComponent up = i == 0 ? this.filterDropdown : rowFirsts.get(i - 1);
+            necesse.gfx.forms.components.FormComponent down = i == rowFirsts.size() - 1 ? this.nextButton : rowFirsts.get(i + 1);
+            rowFirsts.get(i).controllerUpFocus = up;
+            rowFirsts.get(i).controllerDownFocus = down;
+        }
+        if (rowFirsts.isEmpty()) {
+            linkDown(this.filterDropdown, this.nextButton);
+        } else {
+            linkDown(this.filterDropdown, rowFirsts.get(0));
+            linkDown(rowFirsts.get(rowFirsts.size() - 1), this.nextButton);
         }
 
         this.listBox.setContentBox(new Rectangle(0, 0, listWidth, Math.max(rowY, 1)));

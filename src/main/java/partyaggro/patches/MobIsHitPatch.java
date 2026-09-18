@@ -22,7 +22,7 @@ public class MobIsHitPatch {
         }
         try {
             Mob owner = attacker.getAttackOwner();
-            if (mob instanceof PlayerMob || owner instanceof PlayerMob) {
+            if (Debug.isEnabled() && (mob instanceof PlayerMob || owner instanceof PlayerMob)) {
                 Debug.log("isHit victim=" + describe(mob) + " attacker=" + describe(owner)
                         + " prevented=" + event.wasPrevented + " dmg=" + event.damage);
             }

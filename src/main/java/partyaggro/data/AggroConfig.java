@@ -10,6 +10,9 @@ import java.util.Map;
  * keyed by the client's world unique ID.
  */
 public class AggroConfig {
+    /** Global debug logging toggle (default off). */
+    public boolean debug = false;
+
     public final HashMap<Long, String> serverNames = new HashMap<Long, String>();
     public final HashMap<Long, AggroServerSection> servers = new HashMap<Long, AggroServerSection>();
 
@@ -41,6 +44,7 @@ public class AggroConfig {
 
     public List<String> serialize() {
         ArrayList<String> out = new ArrayList<String>();
+        out.add("D|" + (this.debug ? 1 : 0));
         for (Map.Entry<Long, AggroServerSection> e : this.servers.entrySet()) {
             out.add("S|" + e.getKey() + "|" + serverName(e.getKey()) + "|" + e.getValue().serialize());
         }
@@ -54,10 +58,17 @@ public class AggroConfig {
             return;
         }
         for (String line : lines) {
-            if (line == null || !line.startsWith("S|")) {
+            if (line == null) {
                 continue;
             }
             try {
+                if (line.startsWith("D|")) {
+                    this.debug = "1".equals(line.substring(2));
+                    continue;
+                }
+                if (!line.startsWith("S|")) {
+                    continue;
+                }
                 String[] p = line.split("\\|", 4);
                 long worldId = Long.parseLong(p[1]);
                 if (p.length >= 4) {

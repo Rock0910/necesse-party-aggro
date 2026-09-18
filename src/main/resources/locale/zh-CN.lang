@@ -6,6 +6,7 @@ enable_system=启用仇恨系统
 auto_player_attacked=你受攻击时自动记仇
 auto_party_member_attacked=队伍成员受攻击时自动记仇
 auto_player_attacks=你主动攻击玩家时自动记仇
+debug_log=调试日志（写入 partyaggro-debug.log）
 manage=管理仇恨 / 白名单
 keybindings=按键绑定
 filter=筛选

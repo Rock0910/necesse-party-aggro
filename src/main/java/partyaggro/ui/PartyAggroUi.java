@@ -27,12 +27,20 @@ public final class PartyAggroUi {
     private static AggroSettingsForm settingsForm;
     private static AggroManageForm manageForm;
     private static necesse.gfx.forms.Form partyForm;
+    private static boolean manageOpen = false;
+    private static long lastManageLog = 0L;
 
     private PartyAggroUi() {
     }
 
     public static void setFormManager(MainGameFormManager manager) {
         formManager = manager;
+        // New game/manager: drop references to the previous session's forms so they can be GC'd.
+        settingsForm = null;
+        manageForm = null;
+        partyForm = null;
+        gearButton = null;
+        manageOpen = false;
         partyaggro.util.Debug.log("formManager set (" + (manager != null) + ")");
     }
 
@@ -82,6 +90,10 @@ public final class PartyAggroUi {
                 settingsForm.tryPutOnTop();
             } catch (Throwable ignored) {
             }
+            try {
+                formManager.setNextControllerFocus(settingsForm.getInitialFocus());
+            } catch (Throwable ignored) {
+            }
             partyaggro.util.Debug.log("openSettings: opened");
         } catch (Throwable t) {
             partyaggro.util.Debug.log("openSettings failed: " + t);
@@ -92,6 +104,20 @@ public final class PartyAggroUi {
     public static void closeSettings() {
         if (settingsForm != null) {
             settingsForm.setHidden(true);
+        }
+    }
+
+    /** Called when the vanilla adventure party window closes. Closes settings only; hatred list stays open. */
+    public static void onPartyConfigClosed() {
+        partyaggro.util.Debug.log("onPartyConfigClosed open=" + manageOpen + " form=" + (manageForm != null));
+        closeSettings();
+        // If the hatred list was open, keep it open and on top (some close flows hide the top form).
+        if (manageOpen && manageForm != null) {
+            manageForm.setHidden(false);
+            try {
+                manageForm.tryPutOnTop();
+            } catch (Throwable ignored) {
+            }
         }
     }
 
@@ -106,9 +132,14 @@ public final class PartyAggroUi {
                 formManager.addComponent(manageForm);
             }
             manageForm.setHidden(false);
+            manageOpen = true;
             positionNearTop(manageForm, 60);
             try {
                 manageForm.tryPutOnTop();
+            } catch (Throwable ignored) {
+            }
+            try {
+                formManager.setNextControllerFocus(manageForm.getInitialFocus());
             } catch (Throwable ignored) {
             }
             PartyAggroMod.requestPlayers();
@@ -120,15 +151,66 @@ public final class PartyAggroUi {
     }
 
     public static void closeManage() {
+        partyaggro.util.Debug.log("closeManage called");
+        manageOpen = false;
         if (manageForm != null) {
             manageForm.setHidden(true);
         }
     }
 
     public static void tickManage() {
-        if (manageForm != null && !manageForm.isHidden()) {
-            manageForm.tick();
+        if (!manageOpen || formManager == null) {
+            return;
         }
+        long now = System.currentTimeMillis();
+        if (now - lastManageLog > 1000L) {
+            lastManageLog = now;
+            partyaggro.util.Debug.log("manage state form=" + (manageForm != null)
+                    + " inMgr=" + (manageForm != null && isInManager(manageForm))
+                    + " hidden=" + (manageForm != null && manageForm.isHidden())
+                    + " mgrComponents=" + countComponents());
+        }
+        // The hatred list must stay open while logically open, even if a close flow
+        // removed or disposed it. Recreate it if it is no longer registered.
+        if (manageForm == null || !isInManager(manageForm)) {
+            manageForm = new AggroManageForm();
+            formManager.addComponent(manageForm);
+            positionNearTop(manageForm, 60);
+            partyaggro.util.Debug.log("manage (re)created");
+        }
+        if (manageForm.isHidden()) {
+            manageForm.setHidden(false);
+        }
+        try {
+            manageForm.tick();
+        } catch (Throwable t) {
+            partyaggro.util.Debug.log("manage tick failed, will recreate: " + t);
+            manageForm = null;
+        }
+    }
+
+    private static int countComponents() {
+        try {
+            int n = 0;
+            for (Object ignored : formManager.getComponents()) {
+                n++;
+            }
+            return n;
+        } catch (Throwable t) {
+            return -1;
+        }
+    }
+
+    private static boolean isInManager(necesse.gfx.forms.Form form) {
+        try {
+            for (Object component : formManager.getComponents()) {
+                if (component == form) {
+                    return true;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
     }
 
     private static void positionBesideParty(necesse.gfx.forms.Form form) {

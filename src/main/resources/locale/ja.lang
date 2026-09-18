@@ -6,6 +6,7 @@ enable_system=アグロシステムを有効化
 auto_player_attacked=自分が攻撃されたら自動で敵対化
 auto_party_member_attacked=パーティメンバーが攻撃されたら自動で敵対化
 auto_player_attacks=自分がプレイヤーを攻撃したら自動で敵対化
+debug_log=デバッグログ（partyaggro-debug.log に出力）
 manage=敵対 / ホワイトリスト管理
 keybindings=キー設定
 filter=絞り込み

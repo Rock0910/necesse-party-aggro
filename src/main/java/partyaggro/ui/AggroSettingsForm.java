@@ -25,6 +25,7 @@ public class AggroSettingsForm extends Form {
     private final FormCheckBox boxA1;
     private final FormCheckBox boxA2;
     private final FormCheckBox boxA3;
+    private final FormCheckBox boxDebug;
 
     public AggroSettingsForm() {
         super("partyaggro_settings", 340, 120);
@@ -79,6 +80,16 @@ public class AggroSettingsForm extends Form {
         });
         flow.nextY(this.boxA3, 8);
 
+        this.boxDebug = new FormCheckBox(L.t("debug_log"), 6, flow.next(), getWidth() - 12);
+        this.addComponent(this.boxDebug);
+        this.boxDebug.checked = PartyAggroMod.CONFIG.debug;
+        this.boxDebug.onClicked(e -> {
+            PartyAggroMod.CONFIG.debug = this.boxDebug.checked;
+            partyaggro.util.Debug.setEnabled(this.boxDebug.checked);
+            PartyAggroMod.save();
+        });
+        flow.nextY(this.boxDebug, 8);
+
         FormTextButton manage = new FormTextButton(L.t("manage"), 6, flow.next(), getWidth() - 12, FormInputSize.SIZE_24, ButtonColor.BASE);
         manage.onClicked(e -> PartyAggroUi.openManage());
         this.addComponent(manage);
@@ -94,6 +105,31 @@ public class AggroSettingsForm extends Form {
             setDraggingBox(new Rectangle(0, 0, getWidth(), 34));
         } catch (Throwable ignored) {
         }
+
+        // Explicit controller navigation order.
+        linkDown(this.boxEnabled, this.boxA1);
+        linkDown(this.boxA1, this.boxA2);
+        linkDown(this.boxA2, this.boxA3);
+        linkDown(this.boxA3, this.boxDebug);
+        linkDown(this.boxDebug, manage);
+        linkDown(manage, keys);
+        linkDown(keys, close);
+        // Initial controller focus: the master enable checkbox.
+        this.boxEnabled.controllerInitialFocusPriority = 10;
+    }
+
+    private static void linkDown(FormCheckBox upper, FormCheckBox lower) {
+        upper.controllerDownFocus = lower;
+        lower.controllerUpFocus = upper;
+    }
+
+    private static void linkDown(necesse.gfx.forms.components.FormComponent upper, necesse.gfx.forms.components.FormComponent lower) {
+        upper.controllerDownFocus = lower;
+        lower.controllerUpFocus = upper;
+    }
+
+    public necesse.gfx.forms.controller.ControllerFocusHandler getInitialFocus() {
+        return this.boxEnabled;
     }
 
     public void syncEnabled(boolean enabled) {
