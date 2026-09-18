@@ -3,6 +3,7 @@
 ## 1.0.3
 - Added a rebindable hotkey to open the hatred management window (default `B`), in Settings > Controls. Pressing it again closes the window (toggle).
 - The settings window's "Manage" button label follows the currently bound key.
+- Window positions are remembered (saved to `%APPDATA%/Necesse/cfg/partyaggropos.cfg`) and clamped on screen so they never go off-screen.
 
 ## 1.0.2
 - Removed the stale hardcoded version in the init log line.

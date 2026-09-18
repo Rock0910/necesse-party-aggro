@@ -2,16 +2,14 @@ package partyaggro.ui;
 
 import necesse.engine.GlobalData;
 import necesse.engine.Settings;
-import necesse.engine.localization.message.LocalMessage;
 import necesse.engine.state.MainGame;
 import necesse.engine.window.WindowManager;
+import necesse.gfx.forms.Form;
 import necesse.gfx.forms.MainGameFormManager;
 import necesse.gfx.forms.components.FormContentIconButton;
 import necesse.gfx.forms.components.FormInputSize;
-import necesse.gfx.forms.components.FormLabel;
 import necesse.gfx.forms.presets.PauseMenuForm;
 import necesse.gfx.forms.presets.containerComponent.PartyConfigForm;
-import necesse.gfx.gameFont.FontOptions;
 import necesse.gfx.ui.ButtonColor;
 import partyaggro.L;
 import partyaggro.PartyAggroMod;
@@ -26,9 +24,16 @@ public final class PartyAggroUi {
     private static MainGameFormManager formManager;
     private static AggroSettingsForm settingsForm;
     private static AggroManageForm manageForm;
-    private static necesse.gfx.forms.Form partyForm;
+    private static Form partyForm;
     private static boolean manageOpen = false;
     private static long lastManageLog = 0L;
+
+    // Remembered window positions (persisted to partyaggropos.cfg).
+    private static Integer savedManageX;
+    private static Integer savedManageY;
+    private static Integer savedSettingsX;
+    private static Integer savedSettingsY;
+    private static boolean posLoaded = false;
 
     private PartyAggroUi() {
     }
@@ -49,8 +54,7 @@ public final class PartyAggroUi {
             return;
         }
         partyForm = form;
-        // Only a gear button in the top-right corner; nothing added below the vanilla content,
-        // so the form never grows over the hotbar/inventory.
+        // Only a gear button in the top-right corner; nothing added below the vanilla content.
         gearButton = new FormContentIconButton(form.getWidth() - 40, 4, FormInputSize.SIZE_32, ButtonColor.BASE,
                 Settings.UI.config_button_32, L.m("settings_tip"));
         gearButton.onClicked(e -> {
@@ -85,7 +89,7 @@ public final class PartyAggroUi {
                 formManager.addComponent(settingsForm);
             }
             settingsForm.setHidden(false);
-            positionBesideParty(settingsForm);
+            restoreSettingsPosition(settingsForm);
             try {
                 settingsForm.tryPutOnTop();
             } catch (Throwable ignored) {
@@ -105,13 +109,13 @@ public final class PartyAggroUi {
         if (settingsForm != null) {
             settingsForm.setHidden(true);
         }
+        savePos();
     }
 
     /** Called when the vanilla adventure party window closes. Closes settings only; hatred list stays open. */
     public static void onPartyConfigClosed() {
         partyaggro.util.Debug.log("onPartyConfigClosed open=" + manageOpen + " form=" + (manageForm != null));
         closeSettings();
-        // If the hatred list was open, keep it open and on top (some close flows hide the top form).
         if (manageOpen && manageForm != null) {
             manageForm.setHidden(false);
             try {
@@ -133,7 +137,7 @@ public final class PartyAggroUi {
             }
             manageForm.setHidden(false);
             manageOpen = true;
-            positionNearTop(manageForm, 60);
+            restoreManagePosition(manageForm);
             try {
                 manageForm.tryPutOnTop();
             } catch (Throwable ignored) {
@@ -156,6 +160,7 @@ public final class PartyAggroUi {
         if (manageForm != null) {
             manageForm.setHidden(true);
         }
+        savePos();
     }
 
     /** Hotkey behaviour: toggle the hatred list open/closed. */
@@ -168,9 +173,10 @@ public final class PartyAggroUi {
     }
 
     public static void tickManage() {
-        // Refresh the settings window's key hints (they follow the bound keys).
+        // Refresh the settings window's key hints, and keep both windows on screen.
         if (settingsForm != null && !settingsForm.isHidden()) {
             settingsForm.tick();
+            clampToScreen(settingsForm, false);
         }
         if (!manageOpen || formManager == null) {
             return;
@@ -183,22 +189,170 @@ public final class PartyAggroUi {
                     + " hidden=" + (manageForm != null && manageForm.isHidden())
                     + " mgrComponents=" + countComponents());
         }
-        // The hatred list must stay open while logically open, even if a close flow
-        // removed or disposed it. Recreate it if it is no longer registered.
         if (manageForm == null || !isInManager(manageForm)) {
             manageForm = new AggroManageForm();
             formManager.addComponent(manageForm);
-            positionNearTop(manageForm, 60);
+            restoreManagePosition(manageForm);
             partyaggro.util.Debug.log("manage (re)created");
         }
         if (manageForm.isHidden()) {
             manageForm.setHidden(false);
         }
+        clampToScreen(manageForm, true);
         try {
             manageForm.tick();
         } catch (Throwable t) {
             partyaggro.util.Debug.log("manage tick failed, will recreate: " + t);
             manageForm = null;
+        }
+    }
+
+    // ---- Window positions: remember, clamp on screen ----
+
+    private static int hudWidth() {
+        try {
+            return WindowManager.getWindow().getHudWidth();
+        } catch (Throwable t) {
+            return 1280;
+        }
+    }
+
+    private static int hudHeight() {
+        try {
+            return WindowManager.getWindow().getHudHeight();
+        } catch (Throwable t) {
+            return 720;
+        }
+    }
+
+    private static int clamp(int value, int lo, int hi) {
+        return value < lo ? lo : (value > hi ? hi : value);
+    }
+
+    private static String posFile() {
+        try {
+            return GlobalData.cfgPath() + "partyaggropos.cfg";
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    private static Integer parseInt(String value) {
+        try {
+            return value == null ? null : Integer.valueOf(Integer.parseInt(value));
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    private static synchronized void loadPos() {
+        if (posLoaded) {
+            return;
+        }
+        posLoaded = true;
+        String file = posFile();
+        if (file == null) {
+            return;
+        }
+        try {
+            java.util.Properties p = new java.util.Properties();
+            try (java.io.FileInputStream in = new java.io.FileInputStream(file)) {
+                p.load(in);
+            }
+            savedManageX = parseInt(p.getProperty("mx"));
+            savedManageY = parseInt(p.getProperty("my"));
+            savedSettingsX = parseInt(p.getProperty("sx"));
+            savedSettingsY = parseInt(p.getProperty("sy"));
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static synchronized void savePos() {
+        String file = posFile();
+        if (file == null) {
+            return;
+        }
+        try {
+            java.util.Properties p = new java.util.Properties();
+            if (savedManageX != null && savedManageY != null) {
+                p.setProperty("mx", String.valueOf(savedManageX));
+                p.setProperty("my", String.valueOf(savedManageY));
+            }
+            if (savedSettingsX != null && savedSettingsY != null) {
+                p.setProperty("sx", String.valueOf(savedSettingsX));
+                p.setProperty("sy", String.valueOf(savedSettingsY));
+            }
+            try (java.io.FileOutputStream out = new java.io.FileOutputStream(file)) {
+                p.store(out, "Party Aggro window pos");
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void restoreManagePosition(Form form) {
+        loadPos();
+        int w = hudWidth();
+        int h = hudHeight();
+        int x;
+        int y;
+        if (savedManageX != null && savedManageY != null) {
+            x = savedManageX;
+            y = savedManageY;
+        } else {
+            x = w / 2 - form.getWidth() / 2;
+            y = 60;
+        }
+        x = clamp(x, 4, Math.max(4, w - form.getWidth() - 4));
+        y = clamp(y, 4, Math.max(4, h - form.getHeight() - 4));
+        form.setPosition(x, y);
+        savedManageX = x;
+        savedManageY = y;
+    }
+
+    private static void restoreSettingsPosition(Form form) {
+        loadPos();
+        int w = hudWidth();
+        int h = hudHeight();
+        int x;
+        int y;
+        if (savedSettingsX != null && savedSettingsY != null) {
+            x = savedSettingsX;
+            y = savedSettingsY;
+        } else {
+            x = w / 2;
+            y = 40;
+            if (partyForm != null) {
+                x = partyForm.getX() + partyForm.getWidth() + 10;
+                y = partyForm.getY();
+                if (x + form.getWidth() > w - 4) {
+                    x = partyForm.getX() - form.getWidth() - 10;
+                }
+            }
+        }
+        x = clamp(x, 4, Math.max(4, w - form.getWidth() - 4));
+        y = clamp(y, 4, Math.max(4, h - form.getHeight() - 4));
+        form.setPosition(x, y);
+        savedSettingsX = x;
+        savedSettingsY = y;
+    }
+
+    private static void clampToScreen(Form form, boolean manage) {
+        if (form == null) {
+            return;
+        }
+        int w = hudWidth();
+        int h = hudHeight();
+        int nx = clamp(form.getX(), 4, Math.max(4, w - form.getWidth() - 4));
+        int ny = clamp(form.getY(), 4, Math.max(4, h - form.getHeight() - 4));
+        if (nx != form.getX() || ny != form.getY()) {
+            form.setPosition(nx, ny);
+        }
+        if (manage) {
+            savedManageX = nx;
+            savedManageY = ny;
+        } else {
+            savedSettingsX = nx;
+            savedSettingsY = ny;
         }
     }
 
@@ -214,7 +368,7 @@ public final class PartyAggroUi {
         }
     }
 
-    private static boolean isInManager(necesse.gfx.forms.Form form) {
+    private static boolean isInManager(Form form) {
         try {
             for (Object component : formManager.getComponents()) {
                 if (component == form) {
@@ -224,39 +378,6 @@ public final class PartyAggroUi {
         } catch (Throwable ignored) {
         }
         return false;
-    }
-
-    private static void positionBesideParty(necesse.gfx.forms.Form form) {
-        try {
-            int hudWidth = WindowManager.getWindow().getHudWidth();
-            int hudHeight = WindowManager.getWindow().getHudHeight();
-            int x = hudWidth / 2;
-            int y = 40;
-            if (partyForm != null) {
-                x = partyForm.getX() + partyForm.getWidth() + 10;
-                y = partyForm.getY();
-                if (x + form.getWidth() > hudWidth - 4) {
-                    x = partyForm.getX() - form.getWidth() - 10;
-                }
-            }
-            x = Math.max(4, Math.min(x, Math.max(4, hudWidth - form.getWidth() - 4)));
-            y = Math.max(4, Math.min(y, Math.max(4, hudHeight - form.getHeight() - 4)));
-            form.setPosition(x, y);
-        } catch (Throwable ignored) {
-        }
-    }
-
-    private static void positionNearTop(necesse.gfx.forms.Form form, int top) {
-        try {
-            int hudWidth = WindowManager.getWindow().getHudWidth();
-            int hudHeight = WindowManager.getWindow().getHudHeight();
-            int x = hudWidth / 2 - form.getWidth() / 2;
-            int y = top;
-            x = Math.max(4, Math.min(x, Math.max(4, hudWidth - form.getWidth() - 4)));
-            y = Math.max(4, Math.min(y, Math.max(4, hudHeight - form.getHeight() - 4)));
-            form.setPosition(x, y);
-        } catch (Throwable ignored) {
-        }
     }
 
     /** Opens the game's Settings > Controls page so the player can rebind the hotkey. */
