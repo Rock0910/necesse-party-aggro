@@ -54,25 +54,27 @@ public class AggroManageForm extends Form {
     private boolean pendingRebuild = true;
 
     public AggroManageForm() {
-        super("partyaggro_manage", 620, 340);
+        super("partyaggro_manage", 620, 364);
         GameInterfaceStyle ui = Settings.UI;
         int width = getWidth();
 
-        this.search = new FormTextInput(6, 6, FormInputSize.SIZE_32, width - 146, 64);
+        this.addComponent(new FormLabel(L.t("manage"), new FontOptions(20), FormLabel.ALIGN_LEFT, 6, 6, width - 12));
+
+        this.search = new FormTextInput(6, 34, FormInputSize.SIZE_32, width - 146, 64);
         this.search.placeHolder = new LocalMessage("partyaggro", "search_placeholder");
         this.addComponent(this.search);
 
-        FormContentIconButton refresh = new FormContentIconButton(width - 140, 6, FormInputSize.SIZE_32,
+        FormContentIconButton refresh = new FormContentIconButton(width - 140, 34, FormInputSize.SIZE_32,
                 ButtonColor.BASE, ui.button_search_24, L.m("refresh"));
         refresh.onClicked(e -> PartyAggroMod.requestPlayers());
         this.addComponent(refresh);
 
-        FormContentIconButton close = new FormContentIconButton(width - 96, 6, FormInputSize.SIZE_32,
+        FormContentIconButton close = new FormContentIconButton(width - 96, 34, FormInputSize.SIZE_32,
                 ButtonColor.BASE, ui.button_cross, L.m("close"));
         close.onClicked(e -> PartyAggroUi.closeManage());
         this.addComponent(close);
 
-        FormContentIconButton clearAll = new FormContentIconButton(width - 52, 6, FormInputSize.SIZE_32,
+        FormContentIconButton clearAll = new FormContentIconButton(width - 52, 34, FormInputSize.SIZE_32,
                 ButtonColor.BASE, ui.button_trash_24, L.m("clear_all"));
         clearAll.onClicked(e -> {
             AggroServerSection section = PartyAggroMod.CONFIG.get(ClientContext.currentWorldId());
@@ -83,7 +85,7 @@ public class AggroManageForm extends Form {
         });
         this.addComponent(clearAll);
 
-        this.filterDropdown = new FormDropdownSelectionButton<String>(6, 44, FormInputSize.SIZE_32,
+        this.filterDropdown = new FormDropdownSelectionButton<String>(6, 72, FormInputSize.SIZE_32,
                 ButtonColor.BASE, 190, L.m("filter"));
         this.filterDropdown.options.add("all", L.m("filter_all"));
         this.filterDropdown.options.add("hatred", L.m("filter_hatred"));
@@ -97,10 +99,10 @@ public class AggroManageForm extends Form {
         this.addComponent(this.filterDropdown);
 
         // Pagination: page number on the left, then the two buttons together.
-        this.pageLabel = new FormLabel("", new FontOptions(14), FormLabel.ALIGN_RIGHT, width - 252, 50, 132);
+        this.pageLabel = new FormLabel("", new FontOptions(14), FormLabel.ALIGN_RIGHT, width - 252, 78, 132);
         this.addComponent(this.pageLabel);
 
-        this.prevButton = new FormTextButton("<", width - 116, 44, 34, FormInputSize.SIZE_32, ButtonColor.BASE);
+        this.prevButton = new FormTextButton("<", width - 116, 72, 34, FormInputSize.SIZE_32, ButtonColor.BASE);
         this.prevButton.onClicked(e -> {
             if (this.pageCount > 1) {
                 this.currentPage = (this.currentPage - 1 + this.pageCount) % this.pageCount;
@@ -109,7 +111,7 @@ public class AggroManageForm extends Form {
         });
         this.addComponent(this.prevButton);
 
-        this.nextButton = new FormTextButton(">", width - 78, 44, 34, FormInputSize.SIZE_32, ButtonColor.BASE);
+        this.nextButton = new FormTextButton(">", width - 78, 72, 34, FormInputSize.SIZE_32, ButtonColor.BASE);
         this.nextButton.onClicked(e -> {
             if (this.pageCount > 1) {
                 this.currentPage = (this.currentPage + 1) % this.pageCount;
@@ -119,19 +121,19 @@ public class AggroManageForm extends Form {
         this.addComponent(this.nextButton);
 
         // Column headers
-        this.addComponent(new FormLabel(L.t("col_player"), new FontOptions(12), FormLabel.ALIGN_LEFT, COL_NAME, 84, COL_STATE - COL_NAME - 4));
-        this.addComponent(new FormLabel(L.t("col_state"), new FontOptions(12), FormLabel.ALIGN_LEFT, COL_STATE, 84, COL_FIRST - COL_STATE - 4));
-        this.addComponent(new FormLabel(L.t("col_first"), new FontOptions(12), FormLabel.ALIGN_LEFT, COL_FIRST, 84, COL_LAST - COL_FIRST - 4));
-        this.addComponent(new FormLabel(L.t("col_last"), new FontOptions(12), FormLabel.ALIGN_LEFT, COL_LAST, 84, width - COL_LAST - 80));
+        this.addComponent(new FormLabel(L.t("col_player"), new FontOptions(12), FormLabel.ALIGN_LEFT, COL_NAME, 112, COL_STATE - COL_NAME - 4));
+        this.addComponent(new FormLabel(L.t("col_state"), new FontOptions(12), FormLabel.ALIGN_LEFT, COL_STATE, 112, COL_FIRST - COL_STATE - 4));
+        this.addComponent(new FormLabel(L.t("col_first"), new FontOptions(12), FormLabel.ALIGN_LEFT, COL_FIRST, 112, COL_LAST - COL_FIRST - 4));
+        this.addComponent(new FormLabel(L.t("col_last"), new FontOptions(12), FormLabel.ALIGN_LEFT, COL_LAST, 112, width - COL_LAST - 80));
 
-        this.listBox = new FormContentBox(4, 102, width - 8, 200);
+        this.listBox = new FormContentBox(4, 130, width - 8, 200);
         this.addComponent(this.listBox);
 
-        this.countLabel = new FormLabel("", new FontOptions(12), FormLabel.ALIGN_LEFT, 6, 310, width - 12);
+        this.countLabel = new FormLabel("", new FontOptions(12), FormLabel.ALIGN_LEFT, 6, 338, width - 12);
         this.addComponent(this.countLabel);
 
         try {
-            setDraggingBox(new Rectangle(0, 0, getWidth(), 80));
+            setDraggingBox(new Rectangle(0, 0, getWidth(), 30));
         } catch (Throwable ignored) {
         }
 
