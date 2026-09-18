@@ -1,0 +1,16 @@
+# build output
+/build/
+*.class
+*.jar
+
+# logs / local
+*.log
+steam_appid.txt
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
