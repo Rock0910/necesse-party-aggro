@@ -60,7 +60,7 @@ public class PartyAggroMod {
                 }
             }
         });
-        System.out.println("[PartyAggro] init (v0.1.0)");
+        System.out.println("[PartyAggro] init");
         partyaggro.util.Debug.log("init dev=" + GlobalData.isDevMode());
     }
 

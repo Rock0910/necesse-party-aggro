@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2
+- Removed the stale hardcoded version in the init log line.
+- No gameplay changes.
+
 ## 1.0.1
 - Controller (gamepad) support: explicit focus order and initial focus for the settings and management windows.
 - Debug log is now a checkbox and **off by default**; when off there is no log I/O and no hot-path string building.
