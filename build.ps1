@@ -76,4 +76,10 @@ Remove-Item -Force $jarPath -ErrorAction SilentlyContinue
 & $jar cf $jarPath -C $classesDir .
 if ($LASTEXITCODE -ne 0) { throw "jar failed with exit code $LASTEXITCODE" }
 
+# Workshop dev upload reads preview.png from the -mod folder, so keep it in sync.
+$previewSrc = Join-Path $resDir "preview.png"
+if (Test-Path $previewSrc) {
+    Copy-Item $previewSrc (Join-Path $jarDir "preview.png") -Force
+}
+
 Write-Host "Built: $jarPath"
