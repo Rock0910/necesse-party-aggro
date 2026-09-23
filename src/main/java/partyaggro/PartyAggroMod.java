@@ -76,7 +76,7 @@ public class PartyAggroMod {
                 toggleControl = Control.addModControl(new Control(78, "partyaggro_toggle",
                         new LocalMessage("partyaggro", "control_toggle")));
                 toggleControl.tooltip = new LocalMessage("partyaggro", "control_toggle_tip");
-                openManageControl = Control.addModControl(new Control(66, "partyaggro_openmanage",
+                openManageControl = Control.addModControl(new Control(75, "partyaggro_openmanage",
                         new LocalMessage("partyaggro", "control_openmanage")));
                 openManageControl.tooltip = new LocalMessage("partyaggro", "control_openmanage_tip");
             }

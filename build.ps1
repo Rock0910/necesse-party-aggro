@@ -4,7 +4,7 @@ $ErrorActionPreference = "Stop"
 # ---- Mod metadata ----
 $modId = "rockdices.partyaggro"
 $modName = "Party Aggro"
-$modVersion = "1.0.4"
+$modVersion = "1.0.5"
 $gameVersion = "1.3.3"
 $modDescription = "Adventure party aggro/retaliation controls for PvP. Server + client."
 $author = "Rockdices"

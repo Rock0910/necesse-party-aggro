@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.5
+- Changed the default "Open hatred list" hotkey from `B` to `K` (B conflicts with the vanilla "Buff Potions" control). `N` remains the default toggle key.
+
 ## 1.0.4
 - Fixed hotkey bindings resetting after restarting the game: the mod now persists its control bindings in its own config (`rockdices.partyaggro.cfg`) and re-applies them on launch, instead of relying on the game's mod-control save.
 
