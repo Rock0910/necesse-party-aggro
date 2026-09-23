@@ -39,6 +39,10 @@ public class PartyAggroMod {
 
     private static volatile boolean dirty = true;
     private static long lastSentWorldId = Long.MIN_VALUE;
+    private static volatile boolean configLoaded = false;
+    private static boolean bindingsReconciled = false;
+    private static int lastToggleKey = Integer.MIN_VALUE;
+    private static int lastOpenKey = Integer.MIN_VALUE;
 
     public void init() {
         PacketRegistry.registerPacket(PacketAggroSettings.class);
@@ -97,6 +101,7 @@ public class PartyAggroMod {
             public void applyLoadData(LoadData data) {
                 PartyAggroMod.CONFIG.deserialize(data.getStringList("config"));
                 partyaggro.util.Debug.setEnabled(PartyAggroMod.CONFIG.debug);
+                PartyAggroMod.configLoaded = true;
             }
         };
     }
@@ -106,9 +111,52 @@ public class PartyAggroMod {
         dirty = true;
     }
 
+    /**
+     * Persists the mod's control bindings ourselves (Necesse's mod-control save proved
+     * unreliable here). On the first tick after the config is loaded we apply the saved keys,
+     * then we watch for rebinds and store them.
+     */
+    private static void reconcileBindings() {
+        if (!configLoaded || toggleControl == null || openManageControl == null) {
+            return;
+        }
+        if (!bindingsReconciled) {
+            bindingsReconciled = true;
+            try {
+                if (CONFIG.toggleKey > 0) {
+                    toggleControl.changeKey(CONFIG.toggleKey);
+                }
+                if (CONFIG.openManageKey > 0) {
+                    openManageControl.changeKey(CONFIG.openManageKey);
+                }
+            } catch (Throwable ignored) {
+            }
+            lastToggleKey = toggleControl.getKey();
+            lastOpenKey = openManageControl.getKey();
+            CONFIG.toggleKey = lastToggleKey;
+            CONFIG.openManageKey = lastOpenKey;
+            return;
+        }
+        int t = toggleControl.getKey();
+        if (t != lastToggleKey) {
+            lastToggleKey = t;
+            CONFIG.toggleKey = t;
+            save();
+            partyaggro.util.Debug.log("binding toggle -> " + t);
+        }
+        int o = openManageControl.getKey();
+        if (o != lastOpenKey) {
+            lastOpenKey = o;
+            CONFIG.openManageKey = o;
+            save();
+            partyaggro.util.Debug.log("binding openmanage -> " + o);
+        }
+    }
+
     /** Called every client frame from the Input.tick patch. */
     public static void clientTick() {
         PartyAggroUi.tickManage();
+        reconcileBindings();
 
         if (toggleControl != null && toggleControl.isPressed()) {
             Client hotkeyClient = ClientContext.client();

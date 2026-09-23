@@ -13,6 +13,10 @@ public class AggroConfig {
     /** Global debug logging toggle (default off). */
     public boolean debug = false;
 
+    /** Persisted control bindings (-1 = use the default registered key). */
+    public int toggleKey = -1;
+    public int openManageKey = -1;
+
     public final HashMap<Long, String> serverNames = new HashMap<Long, String>();
     public final HashMap<Long, AggroServerSection> servers = new HashMap<Long, AggroServerSection>();
 
@@ -45,6 +49,7 @@ public class AggroConfig {
     public List<String> serialize() {
         ArrayList<String> out = new ArrayList<String>();
         out.add("D|" + (this.debug ? 1 : 0));
+        out.add("K|" + this.toggleKey + "|" + this.openManageKey);
         for (Map.Entry<Long, AggroServerSection> e : this.servers.entrySet()) {
             out.add("S|" + e.getKey() + "|" + serverName(e.getKey()) + "|" + e.getValue().serialize());
         }
@@ -64,6 +69,14 @@ public class AggroConfig {
             try {
                 if (line.startsWith("D|")) {
                     this.debug = "1".equals(line.substring(2));
+                    continue;
+                }
+                if (line.startsWith("K|")) {
+                    String[] k = line.split("\\|", -1);
+                    if (k.length >= 3) {
+                        this.toggleKey = Integer.parseInt(k[1]);
+                        this.openManageKey = Integer.parseInt(k[2]);
+                    }
                     continue;
                 }
                 if (!line.startsWith("S|")) {

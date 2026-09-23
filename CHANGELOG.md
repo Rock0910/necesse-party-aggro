@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.4
+- Fixed hotkey bindings resetting after restarting the game: the mod now persists its control bindings in its own config (`rockdices.partyaggro.cfg`) and re-applies them on launch, instead of relying on the game's mod-control save.
+
 ## 1.0.3
 - Added a rebindable hotkey to open the hatred management window (default `B`), in Settings > Controls. Pressing it again closes the window (toggle).
 - The settings window's "Manage" button label follows the currently bound key.
